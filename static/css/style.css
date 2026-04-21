@@ -1,0 +1,594 @@
+/* ============================================================
+   OpenResPublica TruthChain — Civic Document Design System
+   style.css — single source of truth for all portal styling
+
+   Structure:
+     1.  CSS Variables (global design tokens)
+     2.  Base / Reset
+     3.  Topbar
+     4.  Layout (sidebar + main content)
+     5.  Sidebar & Navigation
+     6.  Panels
+     7.  Tables & Ledger
+     8.  Dashboard Stats
+     9.  Civic Section Block
+     10. Alerts
+     11. Forms & Inputs
+     12. Buttons
+     13. File Drop Zone
+     14. Progress Indicator
+     15. Result Box
+     16. Spinner
+     17. Footer
+   ============================================================ */
+
+/* Google Fonts — loaded once, used via CSS variables below.
+   Playfair Display : panel titles, stat values (serif, civic feel)
+   Source Sans 3    : body text, labels, UI copy (clean, readable)
+   IBM Plex Mono    : hashes, control numbers, code (fixed-width) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+
+/* ── 1. CSS VARIABLES ────────────────────────────────────────────
+   Define all colors and fonts once here — the "global scope" for styling.
+   To change the brand color across the entire portal, change one line here.
+   All rules below reference these variables via var(--name). */
+:root {
+    /* Brand colors */
+    --navy:       #002147;   /* darkest — used for hover states */
+    --navy-deep:  #001530;   /* topbar background */
+    --navy-mid:   #003366;   /* primary action color — buttons, active nav, titles */
+    --gold:       #C9A84C;   /* accent — topbar border, section markers, badges */
+    --gold-pale:  #FDF3D0;   /* light gold — badge backgrounds, hover tints */
+
+    /* Neutral colors */
+    --white:  #FAFAF7;   /* off-white — page background alternative */
+    --ink:    #1A1A2E;   /* body text */
+    --muted:  #6B7280;   /* secondary text, labels, placeholders */
+    --border: rgba(0, 33, 71, 0.1);  /* subtle borders throughout */
+
+    /* Semantic colors */
+    --green:      #1E7A3E;   /* success states */
+    --green-pale: #F0FAF4;   /* success backgrounds */
+    --red:        #B91C1C;   /* error states */
+    --red-pale:   #FEF2F2;   /* error backgrounds */
+    --blue-pale:  #EFF6FF;   /* info alert background */
+
+    /* Typography */
+    --font-serif: 'Playfair Display', serif;
+    --font-sans:  'Source Sans 3', sans-serif;
+    --font-mono:  'IBM Plex Mono', monospace;
+}
+
+
+/* ── 2. BASE / RESET ─────────────────────────────────────────────
+   Remove browser default margin/padding, set the base font and color. */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background: #F0F2F5;
+    color: var(--ink);
+    line-height: 1.6;
+}
+
+
+/* ── 3. TOPBAR ───────────────────────────────────────────────────
+   Sticky header — stays at the top as the user scrolls.
+   z-index:100 keeps it above all panel content. */
+.topbar {
+    background: var(--navy-deep);
+    border-bottom: 3px solid var(--gold);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.topbar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Brand — logo badge + name + subtitle */
+.brand { display: flex; align-items: center; gap: 0.85rem; }
+.brand-badge {
+    width: 36px; height: 36px;
+    background: var(--gold);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.brand h1 { font-family: var(--font-serif); font-size: 1rem; color: #fff; margin: 0; }
+.brand p  { font-size: 0.65rem; color: var(--gold); margin: 0; opacity: 0.8; }
+
+/* Right side — status indicator + lock button */
+.topbar-right { color: #fff; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+
+/* Animated green dot — "engine online" indicator */
+.status-dot {
+    width: 8px; height: 8px;
+    background: #22C55E;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #22C55E;  /* glow effect */
+}
+
+/* Lock Engine button — styled to match the topbar, not a full button */
+.logout-link {
+    color: #fff;
+    font-weight: 600;
+    opacity: 0.8;
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s, background 0.2s;
+}
+.logout-link:hover { opacity: 1; background: rgba(255, 255, 255, 0.1); }
+
+
+/* ── 4. LAYOUT ───────────────────────────────────────────────────
+   Two-column flex layout: sidebar (fixed) + main content (flexible).
+   max-width centers the content on wide screens. */
+.layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 1.5rem auto;
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+    min-height: 80vh;
+}
+.sidebar      { width: 260px; flex-shrink: 0; }
+.main-content { flex-grow: 1; min-width: 0; }
+/* min-width:0 prevents flex children from overflowing on narrow screens */
+
+
+/* ── 5. SIDEBAR & NAVIGATION ─────────────────────────────────────
+   Section headers are purely visual labels — not interactive. */
+.sidebar-section {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 700;
+    margin: 1.5rem 0 0.5rem 0.75rem;
+}
+
+/* Nav items — both <button> and <a> use this class for consistent appearance. */
+.nav-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    color: var(--navy-mid);
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    margin-bottom: 0.25rem;
+    box-sizing: border-box;
+    transition: background 0.2s;
+}
+.nav-item:hover  { background: rgba(0, 33, 102, 0.05); }
+.nav-item.active { background: var(--navy-mid); color: #fff; }
+
+/* Icon inside each nav item */
+.nav-icon { margin-right: 12px; font-size: 1.1rem; }
+
+
+/* ── 6. PANELS ───────────────────────────────────────────────────
+   All panels exist in the DOM. CSS hides them all by default.
+   JavaScript adds/removes "active" to show the correct one. */
+.panel {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    display: none;  /* hidden by default */
+}
+.panel.active { display: block; }  /* shown when JS adds "active" */
+
+.panel-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.panel-icon     { font-size: 1.8rem; }
+.panel-title    { font-family: var(--font-serif); font-size: 1.25rem; color: var(--navy-mid); font-weight: 700; }
+.panel-subtitle { font-size: 0.85rem; color: var(--muted); }
+.panel-body     { padding: 1.5rem; }
+
+
+/* ── 7. TABLES & LEDGER ──────────────────────────────────────────
+   Used in the Local Ledger panel. */
+table { width: 100%; border-collapse: collapse; }
+th {
+    text-align: left;
+    padding: 1rem;
+    background: #F9FAFB;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+
+/* Footer bar below the table — holds the record count and pagination buttons. */
+.table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+}
+.page-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-family: inherit;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--navy-mid);
+    transition: background 0.15s;
+}
+.page-btn:hover:not(:disabled) { background: var(--gold-pale); }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Monospace hash/ID display — used in table cells */
+.mono {
+    font-family: var(--font-mono);
+    background: #F1F5F9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* Document type badge — used in table cells */
+.badge-type {
+    background: var(--gold-pale);
+    color: #8a6a14;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Verify link in ledger table */
+.btn-outline {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    background: transparent;
+    color: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-outline:hover { background: var(--gold-pale); }
+
+
+/* ── 8. DASHBOARD STATS ──────────────────────────────────────────
+   Four stat cards in a responsive grid. */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+.stat-card {
+    background: #F9FAFB;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--navy-mid);  /* colored top accent */
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+}
+.stat-card--gold { border-top-color: var(--gold); }  /* variant for "Last Issue" */
+
+.stat-value {
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--navy-mid);
+    line-height: 1.1;
+}
+.stat-value--green { color: var(--green); }  /* for the ✓ immudb status */
+
+.stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-top: 0.25rem;
+}
+
+
+/* ── 9. CIVIC SECTION BLOCK ──────────────────────────────────────
+   Gold left-border block used for descriptive text inside panels.
+   The section ID (e.g. "01 — Upload") is a visual label only. */
+.civic-section {
+    border-left: 3px solid var(--gold);
+    padding: 0.75rem 1rem;
+    background: #FAFAF7;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1.25rem;
+}
+.civic-section-id {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+.civic-body     { font-size: 0.88rem; color: var(--muted); }
+.civic-body--sm { font-size: 0.83rem; }  /* slightly smaller for dense panels */
+.civic-body p   { margin: 0; }
+
+
+/* ── 10. ALERTS ──────────────────────────────────────────────────
+   Warning and info banners in the Dashboard panel. */
+.alert-group { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 1.25rem; }
+
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.83rem;
+    line-height: 1.5;
+}
+.alert-warning {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    color: #92400E;
+}
+.alert-info {
+    background: var(--blue-pale);
+    border: 1px solid #BFDBFE;
+    color: #1E3A8A;
+}
+
+
+/* ── 11. FORMS & INPUTS ──────────────────────────────────────────
+   Used in the upload form. */
+.form-group { margin-bottom: 1.25rem; }
+
+.form-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--navy-mid);
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+}
+
+/* Shared input styles — select gets the same treatment as text inputs */
+.form-select,
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--navy-mid);  /* highlight on focus */
+}
+.form-textarea { min-height: 140px; resize: vertical; }
+
+
+/* ── 12. BUTTONS ───────────────────────────────────────────────── */
+
+/* Primary submit button — full width, navy */
+.btn-submit {
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--navy-mid);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s;
+}
+.btn-submit:hover    { background: var(--navy); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+/* disabled state — set by portal.js to prevent duplicate submissions */
+
+
+/* ── 13. FILE DROP ZONE ──────────────────────────────────────────
+   The styled drop zone that sits over the hidden <input type="file">.
+   portal.js handles the click delegation and drag-and-drop logic. */
+.file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.file-drop:hover  { border-color: var(--navy-mid); }
+
+/* dragover class added/removed by portal.js during drag events */
+.file-drop.dragover {
+    border-color: var(--navy-mid);
+    background: rgba(0, 33, 102, 0.02);
+}
+
+.file-drop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.file-drop-hint { margin-top: 0.2rem; font-size: 0.75rem; color: var(--muted); }
+
+/* Badge shown after a file is selected — displays filename + size */
+.file-name-badge {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 3px 10px;
+    background: var(--green-pale);
+    color: var(--green);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+}
+
+
+/* ── 14. PROGRESS INDICATOR ──────────────────────────────────────
+   Shows animated steps while Flask processes the upload.
+   Hidden by default — portal.js shows it on form submit. */
+.progress-wrap { display: none; margin-top: 1.25rem; }
+
+/* Row of step pills */
+.progress-steps { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.35rem 0;
+    border-radius: 6px;
+    background: #F1F5F9;
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    transition: background 0.25s, color 0.25s, border-color 0.25s;
+}
+/* Current step — highlighted in navy */
+.progress-step.active {
+    background: var(--navy-mid);
+    color: #fff;
+    border-color: var(--navy-mid);
+}
+/* Completed steps — green */
+.progress-step.done {
+    background: var(--green-pale);
+    color: var(--green);
+    border-color: #86EFAC;
+}
+
+/* Thin progress bar beneath the steps */
+.progress-bar-wrap {
+    height: 5px;
+    background: #E5E7EB;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--navy-mid);
+    border-radius: 99px;
+    transition: width 0.5s ease;  /* smooth fill animation */
+}
+
+
+/* ── 15. RESULT BOX ──────────────────────────────────────────────
+   Shows after Flask responds — either success or error.
+   Hidden by default — portal.js populates and reveals it. */
+.result-box {
+    display: none;
+    margin-top: 1.25rem;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+}
+.result-success { border-color: #86EFAC; }  /* green border on success */
+.result-error   { border-color: #FCA5A5; }  /* red border on error */
+
+.result-header { padding: 0.85rem 1rem; background: #F9FAFB; border-bottom: 1px solid var(--border); }
+.result-header h4 { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--navy-mid); }
+.result-success .result-header { background: var(--green-pale); }
+.result-error   .result-header { background: var(--red-pale); }
+
+.result-body { padding: 1rem; }
+
+/* Key/value grid for success details (File, Type, Status) */
+.result-kv {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 1rem;
+    font-size: 0.83rem;
+    align-items: baseline;
+}
+.result-key { font-weight: 700; color: var(--muted); white-space: nowrap; }
+.result-val { color: var(--ink); word-break: break-all; }
+
+/* Download button — appears inside the result box on success.
+   Uses createObjectURL blob — not a server URL. */
+.download-btn {
+    display: inline-block;
+    margin-top: 0.85rem;
+    padding: 0.55rem 1.1rem;
+    background: var(--navy-mid);
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.83rem;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+.download-btn:hover { background: var(--navy); }
+
+
+/* ── 16. SPINNER ─────────────────────────────────────────────────
+   CSS-only loading animation — no JS, no images.
+   Used in the ledger loading state. */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner {
+    width: 24px; height: 24px;
+    border: 3px solid var(--border);
+    border-top-color: var(--navy-mid);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+
+/* ── 17. FOOTER ──────────────────────────────────────────────────
+   Simple text footer — identity and attribution only. */
+.site-footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+}

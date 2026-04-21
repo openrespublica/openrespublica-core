@@ -1,0 +1,12 @@
+./barchart.go
+./gauge.go
+./image.go
+./list.go
+./paragraph.go
+./piechart.go
+./plot.go
+./sparkline.go
+./stacked_barchart.go
+./table.go
+./tabs.go
+./tree.go

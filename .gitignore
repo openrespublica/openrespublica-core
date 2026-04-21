@@ -1,0 +1,41 @@
+# Environment and secrets
+.env
+.env.*.local
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and runtime
+*.log
+universal-setup.log
+*.pid
+
+# Keys and sensitive artifacts
+*.key
+*.pem
+*.srl
+*.p12
+*.crt
+
+# immudb data
+immudb-data/
+.orp_vault/
+.orp_vault/**
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Build / packaging
+dist/
+build/
+*.egg-info/
+
+# GitHub Pages build output (if you use it locally)
+public/

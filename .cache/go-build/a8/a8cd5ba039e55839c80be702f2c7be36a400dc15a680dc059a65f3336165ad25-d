@@ -1,0 +1,3 @@
+./copy.go
+./tar.go
+./zip.go

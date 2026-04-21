@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORP Engine | Operator Portal</title>
+
+    <!--
+        url_for('static', filename='...') is a Jinja2 expression.
+        Flask evaluates it server-side before sending this HTML to the browser,
+        replacing it with the correct static file path at runtime.
+        This means the path is always correct regardless of deployment location.
+    -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- ── TOPBAR ──────────────────────────────────────────────────
+         Sticky header — stays visible while the user scrolls.
+         Contains brand identity, engine status, and the lock button.
+         The lock button triggers POST /lock_engine via portal.js,
+         which fires SIGINT → graceful_shutdown → RAM disk wiped.
+    ──────────────────────────────────────────────────────────────── -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <div class="brand-badge">🏛️</div>
+                <div>
+                    <h1>ORP Engine</h1>
+                    <p>OpenResPublica TruthChain · Operator Portal</p>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="status-dot"></div>
+                <span>Engine Online</span>
+                &nbsp;·&nbsp;
+                <button id="lockBtn" class="logout-link">🔒 Lock Engine</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── MAIN LAYOUT ──────────────────────────────────────────────
+         Two-column flex layout: sidebar (fixed width) + main content (grows).
+         Only one panel is visible at a time — controlled by the
+         presence or absence of the "active" CSS class, toggled by portal.js.
+    ──────────────────────────────────────────────────────────────── -->
+    <div class="layout">
+
+        <!-- ── SIDEBAR ──────────────────────────────────────────────
+             Each button has a data-target attribute that matches
+             the id of its corresponding panel (e.g. data-target="upload"
+             matches id="panel-upload"). portal.js reads this attribute
+             to know which panel to show — no hardcoded panel names in JS.
+        ──────────────────────────────────────────────────────────── -->
+        <aside class="sidebar">
+
+            <div class="sidebar-section">Operations</div>
+            <button class="nav-item active" data-target="upload">
+                <span class="nav-icon">📄</span> PDF Stamp &amp; Anchor
+            </button>
+
+            <div class="sidebar-section">Audit</div>
+            <button class="nav-item" data-target="ledger">
+                <span class="nav-icon">📋</span> Local Ledger
+            </button>
+            <!--
+                External links use <a> instead of <button> because they
+                navigate away rather than switching panels.
+                target="_blank" opens them in a new tab — portal stays open.
+            -->
+            <a class="nav-item" href="https://openrespublica.github.io/records.html" target="_blank">
+                <span class="nav-icon">🌐</span> Public Ledger ↗
+            </a>
+            <a class="nav-item" href="https://openrespublica.github.io/index.html" target="_blank">
+                <span class="nav-icon">🔍</span> Verify ↗
+            </a>
+
+            <div class="sidebar-section">System</div>
+            <button class="nav-item" data-target="dashboard">
+                <span class="nav-icon">📊</span> Dashboard
+            </button>
+            <a class="nav-item" href="http://localhost:8080" target="_blank">
+                <span class="nav-icon">🗄️</span> immudb Console ↗
+            </a>
+
+        </aside>
+
+        <!-- ── PANELS ───────────────────────────────────────────────
+             All panels exist in the DOM at all times.
+             CSS hides them with display:none by default.
+             The "active" class sets display:block, making one visible.
+             portal.js adds/removes "active" on nav button clicks.
+        ──────────────────────────────────────────────────────────── -->
+        <div class="main-content">
+
+            <!-- ── PANEL: DASHBOARD ─────────────────────────────────
+                 Shows live stats pulled from the public manifest.json.
+                 loadDashboard() in portal.js fetches this on page load.
+                 Stat values start as "—" and are replaced once data arrives.
+            ──────────────────────────────────────────────────────── -->
+            <div class="panel" id="panel-dashboard">
+                <div class="panel-header">
+                    <div class="panel-icon">📊</div>
+                    <div>
+                        <div class="panel-title">System Dashboard</div>
+                        <div class="panel-subtitle">Live status of the TruthChain stack</div>
+                    </div>
+                </div>
+                <div class="panel-body">
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-value" id="dTotal">—</div>
+                            <div class="stat-label">Total Anchored</div>
+                        </div>
+                        <div class="stat-card stat-card--gold">
+                            <div class="stat-value" id="dLatest">—</div>
+                            <div class="stat-label">Last Issue</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value stat-value--green">✓</div>
+                            <div class="stat-label">immudb Status</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">2026</div>
+                            <div class="stat-label">Ledger Year</div>
+                        </div>
+                    </div>
+
+                    <div class="civic-section">
+                        <span class="civic-section-id">01 — System Status</span>
+                        <div class="civic-body">
+                            <p>The ORP Engine is operational. Documents submitted through
+                            the PDF Stamp route are automatically hashed, anchored to the
+                            local immudb instance, and published to the public ledger at
+                            <em>openrespublica.github.io</em> within 60 to 90 seconds of issuance.</p>
+                        </div>
+                    </div>
+
+                    <div class="alert-group">
+                        <div class="alert alert-warning">
+                            🔒 This portal is restricted to authorized barangay operators only.
+                            All access and issuance actions are logged and anchored to the immutable ledger.
+                        </div>
+                        <div class="alert alert-info">
+                            🔗 Public ledger syncs to <strong>openrespublica.github.io</strong>
+                            within 60–90 seconds. Records are cryptographically immutable once pushed.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── PANEL: PDF STAMP & ANCHOR ────────────────────────
+                 The core panel — the only document processing route.
+                 Flow:
+                   1. Operator selects a PDF via drop zone or browse
+                   2. Operator selects document type
+                   3. Operator clicks submit
+                   4. portal.js sends FormData via POST /upload
+                   5. Progress steps animate while Flask processes
+                   6. Result box shows success + download link, or error
+            ──────────────────────────────────────────────────────── -->
+            <div class="panel active" id="panel-upload">
+                <!--
+                    "active" is hardcoded here so this panel is visible
+                    on page load without JavaScript running first.
+                    If JS fails entirely, the operator still sees the form.
+                -->
+                <div class="panel-header">
+                    <div class="panel-icon">📄</div>
+                    <div>
+                        <div class="panel-title">PDF Stamp &amp; Anchor</div>
+                        <div class="panel-subtitle">
+                            Upload an existing PDF to hash, stamp, and anchor to the immutable ledger
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+
+                    <div class="civic-section">
+                        <span class="civic-section-id">01 — Upload</span>
+                        <div class="civic-body civic-body--sm">
+                            <p>Select a PDF document for cryptographic processing. The system will
+                            compute a SHA-256 fingerprint, anchor it to immudb, stamp the document
+                            with a QR code and control number, and publish the record to the
+                            public ledger automatically.</p>
+                        </div>
+                    </div>
+
+                    <form id="uploadForm">
+
+                        <!--
+                            File drop zone.
+                            The actual <input type="file"> is hidden (display:none)
+                            because the native browser file input cannot be styled with CSS.
+                            The styled .file-drop div acts as the visible target —
+                            portal.js programmatically clicks the hidden input when
+                            the operator clicks or drops a file onto this zone.
+                        -->
+                        <div class="form-group">
+                            <label class="form-label">Document File</label>
+                            <div class="file-drop" id="dropZone">
+                                <input type="file" id="pdfFile" accept=".pdf" style="display:none">
+                                <div class="file-drop-icon">📄</div>
+                                <p><strong>Click to browse</strong> or drag &amp; drop</p>
+                                <p class="file-drop-hint">PDF files only &nbsp;·&nbsp; Max 20MB</p>
+                                <!--
+                                    selectedFileName starts hidden.
+                                    portal.js makes it visible and fills it with
+                                    filename + size once a file is selected.
+                                -->
+                                <span id="selectedFileName" class="file-name-badge" style="display:none;"></span>
+                            </div>
+                        </div>
+
+                        <!--
+                            Document type selector.
+                            The selected value is sent as doc_type in the FormData.
+                            Flask uses it to build the control number suffix:
+                            e.g. Verified_2026-0042-BARANGAY-CERT.pdf
+                        -->
+                        <div class="form-group">
+                            <label class="form-label">Document Type</label>
+                            <select class="form-select" id="uploadDocType">
+                                <option value="BARANGAY-CERT">Barangay Certificate</option>
+                                <option value="INDIGENCY-CERT">Certificate of Indigency</option>
+                                <option value="RESIDENCY-CERT">Certificate of Residency</option>
+                                <option value="CLEARANCE">Barangay Clearance</option>
+                                <option value="BUSINESS-PERMIT">Business Permit</option>
+                                <option value="DICT-INQUIRY">DICT Inquiry (RA 11337)</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="uploadBtn">
+                            🔏 Stamp, Hash &amp; Anchor to Ledger
+                        </button>
+
+                    </form>
+
+                    <!--
+                        Progress indicator — hidden by default (display:none in CSS).
+                        portal.js reveals this on submit and animates the four steps.
+                        Steps 1-3 are timed theatre. Step 4 fires on actual Flask response.
+                    -->
+                    <div class="progress-wrap" id="uploadProgress">
+                        <div class="progress-steps">
+                            <div class="progress-step" id="us1">Hashing</div>
+                            <div class="progress-step" id="us2">Anchoring</div>
+                            <div class="progress-step" id="us3">Stamping</div>
+                            <div class="progress-step" id="us4">Publishing</div>
+                        </div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar" id="uploadBar"></div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Result box — hidden by default.
+                        portal.js fills this with success details + download link,
+                        or an error message, after Flask responds.
+                    -->
+                    <div class="result-box" id="uploadResult"></div>
+
+                </div>
+            </div>
+
+            <!-- ── PANEL: LOCAL LEDGER ───────────────────────────────
+                 Fetches manifest.json from GitHub Pages and renders
+                 the most recent records in a paginated table.
+                 Loaded on demand — not on page load — to save the
+                 network request until the operator actually needs it.
+            ──────────────────────────────────────────────────────── -->
+            <div class="panel" id="panel-ledger">
+                <div class="panel-header">
+                    <div class="panel-icon">📋</div>
+                    <div>
+                        <div class="panel-title">Local Ledger</div>
+                        <div class="panel-subtitle">
+                            Most recent anchored records from the public manifest
+                        </div>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Control No.</th>
+                                <th>Type</th>
+                                <th>Timestamp</th>
+                                <th>Fingerprint</th>
+                                <th>Tx ID</th>
+                                <th style="text-align:center;">Action</th>
+                            </tr>
+                        </thead>
+                        <!--
+                            ledgerBody starts with a loading spinner.
+                            portal.js replaces its contents once the
+                            manifest fetch completes or fails.
+                        -->
+                        <tbody id="ledgerBody">
+                            <tr>
+                                <td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">
+                                    <div class="spinner"></div> Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination controls — disabled until data loads. -->
+                <div class="table-footer">
+                    <span id="ledgerCount">—</span>
+                    <div style="display:flex;gap:0.35rem;">
+                        <button class="page-btn" id="lPrev" disabled>← Prev</button>
+                        <button class="page-btn" id="lNext" disabled>Next →</button>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end .main-content -->
+    </div><!-- end .layout -->
+
+    <!-- ── FOOTER ──────────────────────────────────────────────── -->
+    <footer class="site-footer">
+        OpenResPublica TruthChain &nbsp;·&nbsp; ORP Engine Operator Portal &nbsp;·&nbsp;
+        Barangay Buñao, Dumaguete City &nbsp;·&nbsp; Secured by immudb &amp; Ed25519
+    </footer>
+
+    <!--
+        portal.js is loaded at the bottom of <body> — not in <head>.
+        This ensures all HTML elements exist in the DOM before JS
+        tries to attach event listeners to them.
+    -->
+    <script src="/static/js/portal.js"></script>
+
+</body>
+</html>

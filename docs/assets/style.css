@@ -1,0 +1,47 @@
+:root { 
+    --primary: #003366; /* Deep National Blue */
+    --accent: #f1c40f;  /* Philippine Gold */
+}
+
+.hero { 
+    background: var(--primary); 
+    color: white; 
+    padding: 2.5rem 0; 
+    text-align: center; 
+    border-bottom: 5px solid var(--accent); 
+}
+
+.status-card { 
+    display: none; 
+    padding: 1.5rem; 
+    border-radius: 8px; 
+    margin-top: 2rem; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
+}
+
+.verified { 
+    background: #e8f5e9; 
+    border: 2px solid #2e7d32; 
+    color: #1b5e20; 
+}
+
+.not-found { 
+    background: #ffebee; 
+    border: 2px solid #c62828; 
+    color: #b71c1c; 
+}
+
+code { 
+    word-break: break-all; 
+    font-size: 0.85rem; 
+    background: rgba(0,0,0,0.08); 
+    padding: 4px; 
+    border-radius: 4px;
+}
+
+.footer-nav { margin-top: 3rem; }
+
+table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); }
+table td { font-size: 0.9rem; vertical-align: middle; }
+.badge-type { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+mark { background-color: var(--accent); color: #000; padding: 0 4px; }
