@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # OpenResPublica TruthChain — ORP Engine
 
 **Cryptographically verifiable barangay document issuance.**  
@@ -500,3 +501,7 @@ Deployed at Barangay Buñao, Dumaguete City, Negros Oriental, Philippines.
 ---
 
 *Secured by immudb · Ed25519 · SHA-256 · mTLS · OpenPGP*
+=======
+# openrespublica-core
+Official setup wizard and documentation for OpenResPublica (ORP) Sovereign Nodes. A zero-trust, verifiable civic infrastructure system built for Local Government Units utilizing immutable ledgers and mTLS gateways.
+>>>>>>> 65e754ce974b099ee7bf330b188b25371e28828d
