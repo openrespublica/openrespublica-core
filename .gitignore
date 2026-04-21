@@ -65,4 +65,5 @@ build/
 *.egg-info/
 
 # GitHub Pages build output (if used locally)
-public/
+public/.lesshst
+.local/
