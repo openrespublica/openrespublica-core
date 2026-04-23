@@ -108,24 +108,37 @@ printf "\n"
 info "Verifying installed packages..."
 pip list
 
-# ── Check for critical packages ───────────────────────────────────
+#if [ ${#MISSING_PACKAGES[@]} -gt 0 ]; then
+#    die "Missing critical packages: ${MISSING_PACKAGES[*]}"
+#fi
+
+# ── Verify Critical Packages ──────────────────────────────────────
+# Note: Pip package names often differ from Python import names.
+# Key: "Package-Name:ImportName"
 printf "\n"
 info "Checking for critical packages..."
 
-CRITICAL_PACKAGES=("Flask" "gunicorn" "pypdf" "python_gnupg" "immudb_client")
-MISSING_PACKAGES=()
+CRITICAL_MAP=(
+    "Flask:flask"
+    "gunicorn:gunicorn"
+    "pypdf:pypdf"
+    "python-gnupg:gnupg"
+    "immudb-py:immudb"
+)
 
-for pkg in "${CRITICAL_PACKAGES[@]}"; do
-    if ! python3 -c "import ${pkg//-/_}" 2>/dev/null; then
-        MISSING_PACKAGES+=("$pkg")
+printf "\n"
+info "Verifying cryptographic and engine modules..."
+
+for entry in "${CRITICAL_MAP[@]}"; do
+    pkg="${entry%%:*}"
+    mod="${entry#*:}"
+    
+    if python3 -c "import $mod" 2>/dev/null; then
+        ok "Module '$mod' ($pkg) is functional"
     else
-        ok "$pkg installed"
+        die "Verification failed: Package '$pkg' installed but module '$mod' cannot be imported."
     fi
 done
-
-if [ ${#MISSING_PACKAGES[@]} -gt 0 ]; then
-    die "Missing critical packages: ${MISSING_PACKAGES[*]}"
-fi
 
 # ── Summary ───────────────────────────────────────────────────────
 printf "\n${BOLD}${CYAN}━━━ Setup Complete ━━━${NC}\n\n"
