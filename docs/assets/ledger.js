@@ -1,41 +1,145 @@
-let ledgerData = [];
+// ledger.js — Public Audit Ledger Logic for records.html
+// ─────────────────────────────────────────────────────────────────
+// Fetches manifest.json and renders the paginated records table.
+//
+// BUG FIXED (.reverse()):
+//   manifest.json is written by main.py with records.insert(0, record)
+//   — newest record is always at index 0 (newest-first order).
+//   Calling .reverse() inverted this, making the oldest records appear
+//   at the top and ledgerData[0] become the oldest, not the newest.
+//   Both the table display and the "Latest Issue" stat were wrong.
+//   Fix: remove .reverse() entirely.
+//
+// BUG FIXED (null safety):
+//   item.control_number, item.timestamp, item.sha256_hash can be
+//   null or undefined on malformed records. All template expressions
+//   now use (value || fallback) guards to prevent uncaught TypeErrors.
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadLedger();
-});
+let ledgerData   = [];
+let filteredData = [];
+let currentPage  = 1;
+const PAGE_SIZE  = 15;
+
+document.addEventListener('DOMContentLoaded', loadLedger);
 
 async function loadLedger() {
     const tbody = document.getElementById('ledger-body');
+
     try {
+        // Cache-buster so citizens always see the current ledger state.
         const response = await fetch(`records/manifest.json?t=${Date.now()}`);
-        if (!response.ok) throw new Error();
-        
-        ledgerData = await response.json();
-        // Show newest records first
-        renderTable(ledgerData.reverse());
-    } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No records found in the cloud ledger yet.</td></tr>';
+        if (!response.ok) throw new Error('Manifest unavailable');
+
+        // manifest.json is already newest-first — NO .reverse() here.
+        // main.py uses records.insert(0, record), so index 0 = most recent.
+        ledgerData   = await response.json();
+        filteredData = ledgerData;
+
+        // ── Stats ─────────────────────────────────────────────────
+        const statTotal  = document.getElementById('statTotal');
+        const statLatest = document.getElementById('statLatest');
+        const statYear   = document.getElementById('statYear');
+
+        if (statTotal)  statTotal.textContent  = ledgerData.length;
+
+        if (statLatest && ledgerData.length > 0) {
+            // ledgerData[0] is the NEWEST record (insert(0, ...) means newest = first)
+            const ts = (ledgerData[0] && ledgerData[0].timestamp) || '';
+            statLatest.textContent = ts ? ts.split(' ')[0] : '—';
+        }
+
+        // Auto-update the ledger year from the current date
+        if (statYear) statYear.textContent = new Date().getFullYear();
+
+        renderPage();
+
+    } catch {
+        if (tbody) {
+            tbody.innerHTML =
+                '<tr><td colspan="5"><div class="table-msg">' +
+                'No records found in the public ledger yet.' +
+                '</div></td></tr>';
+        }
+        const countEl = document.getElementById('recordCount');
+        if (countEl) countEl.textContent = '0 records';
+
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
     }
 }
 
-function renderTable(arr) {
+function renderPage() {
     const tbody = document.getElementById('ledger-body');
-    tbody.innerHTML = arr.map(item => `
+    if (!tbody) return;
+
+    const total = filteredData.length;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end   = Math.min(start + PAGE_SIZE, total);
+    const slice = filteredData.slice(start, end);
+
+    if (slice.length === 0) {
+        tbody.innerHTML =
+            '<tr><td colspan="5"><div class="table-msg">' +
+            'No matching records found.' +
+            '</div></td></tr>';
+        const countEl = document.getElementById('recordCount');
+        if (countEl) countEl.textContent = '0 records';
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
+    }
+
+    // Null-safe template literals — every field has a fallback value.
+    tbody.innerHTML = slice.map(item => `
         <tr>
-            <td><strong>${item.control_number}</strong></td>
-            <td>${item.timestamp.split(' ')[0]}</td>
+            <td><span class="ctrl-num">${item.control_number || '—'}</span></td>
+            <td><span class="date-cell">${formatDate(item.timestamp)}</span></td>
             <td><span class="badge-type">${item.document_type || 'GENERAL'}</span></td>
-            <td><code>${item.sha256_hash.substring(0, 12)}...</code></td>
-            <td><a href="index.html?hash=${item.sha256_hash}">Verify</a></td>
+            <td><span class="hash-cell">${(item.sha256_hash || '').substring(0, 16)}…</span></td>
+            <td class="action-cell">
+                <a href="index.html?hash=${item.sha256_hash || ''}" class="verify-link">Verify</a>
+            </td>
         </tr>
     `).join('');
+
+    const countEl = document.getElementById('recordCount');
+    if (countEl) {
+        countEl.textContent =
+            `Showing ${start + 1}–${end} of ${total} record${total !== 1 ? 's' : ''}`;
+    }
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = end >= total;
 }
 
+// Called by onclick handlers in records.html: changePage(-1) / changePage(1)
+function changePage(dir) {
+    const maxPage = Math.ceil(filteredData.length / PAGE_SIZE);
+    currentPage   = Math.max(1, Math.min(currentPage + dir, maxPage));
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Called by oninput on the search field in records.html
 function searchLedger() {
-    const term = document.getElementById('search').value.toLowerCase();
-    const filtered = ledgerData.filter(item => 
-        item.control_number.toLowerCase().includes(term) || 
-        item.document_type.toLowerCase().includes(term)
-    );
-    renderTable(filtered);
+    const term = (document.getElementById('search')?.value || '').toLowerCase().trim();
+    filteredData = term
+        ? ledgerData.filter(item =>
+            (item.control_number || '').toLowerCase().includes(term) ||
+            (item.document_type  || '').toLowerCase().includes(term)
+          )
+        : ledgerData;
+    currentPage = 1;
+    renderPage();
+}
+
+function formatDate(ts) {
+    if (!ts) return '—';
+    return ts.split(' ')[0] || '—';
 }
