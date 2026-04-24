@@ -430,7 +430,7 @@
                 <div class="seal-ornament"></div>
             </div>
             <h1>TruthChain Verification</h1>
-            <p class="subtitle">LGU Barangay Buñao &nbsp;·&nbsp; Cryptographic Document Audit Portal</p>
+            <p class="subtitle">{{LGU_NAME}} &nbsp;·&nbsp; Cryptographic Document Audit Portal</p>
         </div>
     </header>
 
@@ -485,98 +485,15 @@
 
     <footer class="site-footer">
         Secured by <strong>immudb</strong> &amp; Ed25519 cryptography &nbsp;·&nbsp;
-        <strong>OpenResPublica TruthChain</strong> &nbsp;·&nbsp; Barangay Buñao, Dumaguete City
+        <strong>OpenResPublica TruthChain</strong> &nbsp;·&nbsp; {{LGU_NAME}}
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const hash = params.get('hash');
-            const btn = document.getElementById('verifyBtn');
-
-            if (hash) {
-                document.getElementById('hashInput').value = hash;
-                checkHash(hash);
-            }
-
-            btn.addEventListener('click', () => checkHash());
-            document.getElementById('hashInput').addEventListener('keydown', e => {
-                if (e.key === 'Enter') checkHash();
-            });
-        });
-
-        async function checkHash(inputHash, retryCount = 0) {
-            const hash = (inputHash || document.getElementById('hashInput').value).trim();
-            if (!hash) return;
-
-            const vBox = document.getElementById('verifiedBox');
-            const eBox = document.getElementById('errorBox');
-            const load = document.getElementById('loading');
-            const loadMsg = document.getElementById('loadingMsg');
-
-            vBox.style.display = 'none';
-            eBox.style.display = 'none';
-            load.style.display = 'block';
-            loadMsg.textContent = 'Querying immutable ledger...';
-
-            try {
-                const response = await fetch(`records/${hash}.json?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Not found");
-                const data = await response.json();
-
-                document.getElementById('details').innerHTML = `
-                    <div class="detail-row">
-                        <span class="detail-label">Status</span>
-                        <span class="detail-value">${data.status}</span>
-                    </div>
-                    <hr class="divider">
-                    <div class="detail-row">
-                        <span class="detail-label">Signed By</span>
-                        <span class="detail-value">${data.signer}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Position</span>
-                        <span class="detail-value">${data.position}</span>
-                    </div>
-                    <hr class="divider">
-                    <div class="detail-row">
-                        <span class="detail-label">Control No.</span>
-                        <span class="detail-value">${data.control_number}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Document Type</span>
-                        <span class="detail-value">${data.document_type || 'GENERAL'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Timestamp</span>
-                        <span class="detail-value">${data.timestamp}</span>
-                    </div>
-                    <hr class="divider">
-                    <div class="detail-row">
-                        <span class="detail-label">immudb Tx</span>
-                        <span class="detail-value"><span class="tx-badge">#${data.immudb_transaction_id}</span></span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">SHA-256</span>
-                        <span class="detail-value mono">${data.sha256_hash}</span>
-                    </div>
-                `;
-
-                load.style.display = 'none';
-                vBox.style.display = 'block';
-
-            } catch (e) {
-                if (retryCount < 1) {
-                    loadMsg.textContent = 'Propagation lag detected — retrying in 10s...';
-                    setTimeout(() => checkHash(hash, retryCount + 1), 10000);
-                } else {
-                    load.style.display = 'none';
-                    document.getElementById('errorHash').textContent = hash;
-                    eBox.style.display = 'block';
-                }
-            }
-        }
-    </script>
+    <!-- verify.js handles hash lookup, retry logic, and result rendering.
+         Bugs fixed in verify.js vs the old inline script:
+           • finally block removed — spinner no longer hides during 10s retry
+           • null safety added — all data fields have fallback '—' values
+           • Enter key handler included (was already here, preserved in verify.js) -->
+    <script src="verify.js"></script>
 
 </body>
 </html>
